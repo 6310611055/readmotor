@@ -1,4 +1,4 @@
-### Running Project step
+## Running Project step
 1. install nodejs
 2. create file `.env`
 3. copy file content from `envs/.env.example` and place it to `.env`
@@ -12,6 +12,6 @@
 
 
 
-### Extension required
+## Extension required
 1. `Database Client` (ExtensionID : cweijan.vscode-database-client2)
 2. `EJS language support` (ExtensionID: DigitalBrainstem.javascript-ejs-support)
