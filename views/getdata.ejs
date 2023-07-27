@@ -1,0 +1,1841 @@
+<%- include('header.ejs') %>
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Real-time Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+    integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+    crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+  <script src="paho-mqtt-min.js"></script>
+  <script src="csv.min.js"></script>
+</head>
+
+<body>
+
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+      <p>MST Data: <span id="mstData"></span></p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>  
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var intervalId;
+        var data = [];
+        var mstData;
+
+        var experimentName = localStorage.getItem('experimentName');
+        document.getElementById('experimentName').textContent = experimentName;
+
+        function fetchData() {
+          axios.get('http://192.168.1.27:8000/getdata')
+            .then(response => {
+              const responseData = response.data;
+              const dataContainer = document.getElementById('dataContainer');
+              dataContainer.innerHTML = `
+              <p>Data: ${responseData.data.join(', ')}</p>
+              <p>Detected: ${responseData.detected}</p>
+              <p>MST Data: ${responseData.mstData}</p>
+            `;
+
+              // Update the graph
+              updateGraph(responseData.data);
+              data.push(responseData.data);
+              mstData = responseData.mstData;
+              document.getElementById('mstData').textContent = mstData;
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+
+        // function updateGraph(data) {
+        //   chart.data.labels = data.map((_, index) => index + 1);
+        //   chart.data.datasets[0].data = data;
+        //   chart.update();
+        // }
+
+        function updateGraph(data) {
+          chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+          chart.data.datasets[0].data = data;
+          chart.options.scales.x = {
+            type: 'linear',
+            min: 0,
+            max: 600,
+            ticks: {
+              stepSize: 100,
+            },
+          };
+          chart.update();
+        }
+  
+
+        function startFetching() {
+          fetchData();
+          intervalId = setInterval(fetchData, 1000);
+        }
+
+        function stopFetching() {
+          clearInterval(intervalId);
+          // Clear the data container
+          const dataContainer = document.getElementById('dataContainer');
+          dataContainer.innerHTML = "";
+          alert('Data fetching stopped successfully.');
+        }
+
+        startFetching();
+
+        var stopButtonn = document.getElementById('stopButtonn');
+        stopButtonn.addEventListener('click', stopFetching);
+
+        var saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveData);
+
+        function saveData() {
+          const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "data.csv");
+          document.body.appendChild(link);
+          link.click();
+        }
+      });
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Data',
+              data: [],
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+          ],
+        },
+      });
+
+      document.getElementById('saveButtonn').addEventListener('click', function () {
+        axios.get('http://192.168.1.27:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("save succesful !");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('stopButton').addEventListener('click', function () {
+        axios.get('http://192.168.1.27:8000/stop')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.data.status === true) {
+              console.log('Stop request succeeded.');
+              console.log('Current data:', response.data.data);
+            } else {
+              console.error('Stop request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });  
+      
+    </script>
+</body>
+
+</html> -->
+
+
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Real-time Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <canvas id="myChart"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var data = [];
+      var data50 = [];
+      var data150 = [];
+
+      function fetchData() {
+        axios.get('http://192.168.1.27:8000/getdata')
+          .then(response => {
+            const responseData = response.data;
+            data = responseData.data;
+            data50 = responseData.data50;
+            data150 = responseData.data150;
+            updateGraph(data, data50, data150);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      function updateGraph(data, data50, data150) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: Array.from({ length: data.length }, (_, index) => index + 1),
+            datasets: [{
+              label: 'Data',
+              data: data,
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 50',
+              data: data50,
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 150',
+              data: data150,
+              borderColor: 'red',
+              borderWidth: 1,
+            }],
+          },
+        });
+      }
+
+      fetchData();
+      setInterval(fetchData, 1000);
+    });
+  </script>
+</body>
+
+</html> -->
+
+
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Real-time Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+    integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+    crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+  <script src="paho-mqtt-min.js"></script>
+  <script src="csv.min.js"></script>
+</head>
+
+<body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+      <p>MST Data: <span id="mstData"></span></p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>  
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var intervalId;
+        var data = [];
+        var mstData;
+        var data50 = [];
+        var data150 = [];
+
+        var experimentName = localStorage.getItem('experimentName');
+        document.getElementById('experimentName').textContent = experimentName;
+
+        function fetchData() {
+          axios.get('http://192.168.1.27:8000/getdata')
+            .then(response => {
+              const responseData = response.data;
+              const dataContainer = document.getElementById('dataContainer');
+              dataContainer.innerHTML = `
+              <p>Data: ${responseData.data.join(', ')}</p>
+              <p>Data 50: ${responseData.data50.join(', ')}</p>
+              <p>Data 150: ${responseData.data150.join(', ')}</p>
+              <p>Detected: ${responseData.detected}</p>
+              <p>MST Data: ${responseData.mstData}</p>
+            `;
+
+              // Update the graph
+              updateGraph(responseData.data, responseData.data50, responseData.data150);
+              data.push(responseData.data);
+              data50.push(responseData.data50);
+              data150.push(responseData.data150);
+              mstData = responseData.mstData;
+              document.getElementById('mstData').textContent = mstData;
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+
+        function updateGraph(data, data50, data150) {
+          chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+          chart.data.datasets[0].data = data;
+          chart.data.datasets[1].data = data50;
+          chart.data.datasets[2].data = data150;
+          chart.options.scales.x = {
+            type: 'linear',
+            min: 0,
+            max: 1800,
+            ticks: {
+              stepSize: 100,
+            },
+          };
+          chart.update();
+        }
+
+        function startFetching() {
+          fetchData();
+          intervalId = setInterval(fetchData, 1000);
+        }
+
+        function stopFetching() {
+          clearInterval(intervalId);
+          // Clear the data container
+          const dataContainer = document.getElementById('dataContainer');
+          dataContainer.innerHTML = "";
+          alert('Data fetching stopped successfully.');
+        }
+
+        startFetching();
+
+        var stopButtonn = document.getElementById('stopButtonn');
+        stopButtonn.addEventListener('click', stopFetching);
+
+        var saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveData);
+
+        function saveData() {
+          const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "data.csv");
+          document.body.appendChild(link);
+          link.click();
+        }
+      });
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Data',
+              data: [],
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 50',
+              data: [],
+              borderColor: 'red',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 150',
+              data: [],
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+          ],
+        },
+      });
+
+      document.getElementById('saveButtonn').addEventListener('click', function () {
+        axios.get('http://192.168.1.27:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("Save successful!");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('stopButton').addEventListener('click', function () {
+        axios.get('http://192.168.1.27:8000/stop')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.data.status === true) {
+              console.log('Stop request succeeded.');
+              console.log('Current data:', response.data.data);
+            } else {
+              console.error('Stop request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });  
+      
+    </script>
+</body>
+
+</html> -->
+
+
+
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Real-time Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+    integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+    crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+  <script src="paho-mqtt-min.js"></script>
+  <script src="csv.min.js"></script>
+</head>
+
+<body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+      <p>MST Data: <span id="mstData"></span></p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+  var intervalId;
+  var data = [];
+  var mstData;
+  var data50 = [];
+  var data150 = [];
+  var diffValuesIndices = []; // New variable to hold diff_values_indices
+
+  var experimentName = localStorage.getItem('experimentName');
+  document.getElementById('experimentName').textContent = experimentName;
+
+  function fetchData() {
+    axios.get('http://192.168.1.105:8000/getdata')
+      .then(response => {
+        const responseData = response.data;
+        const dataContainer = document.getElementById('dataContainer');
+        dataContainer.innerHTML = `
+          <p>Data: ${responseData.data.join(', ')}</p>
+          <p>Data 50: ${responseData.data50.join(', ')}</p>
+          <p>Data 150: ${responseData.data150.join(', ')}</p>
+          <p>Detected: ${responseData.detected}</p>
+          <p>MST Data: ${responseData.mstData}</p>
+          <p>Diff Values Indices: ${responseData.diff_values_indices.join(', ')}</p>
+        `;
+
+        // Update the graph
+        updateGraph(responseData.data, responseData.data50, responseData.data150);
+        data.push(responseData.data);
+        data50.push(responseData.data50);
+        data150.push(responseData.data150);
+        mstData = responseData.mstData;
+        diffValuesIndices = responseData.diff_values_indices; // Update diffValuesIndices
+        document.getElementById('mstData').textContent = mstData;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+          function updateGraph(data, data50, data150) {
+            chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+            chart.data.datasets[0].data = data;
+            chart.data.datasets[1].data = data50;
+            chart.data.datasets[2].data = data150;
+            chart.update();
+          }
+
+          function startFetching() {
+            fetchData();
+            intervalId = setInterval(fetchData, 1000); // Fetch data every 1 second (1000 milliseconds)
+          }
+
+          function stopFetching() {
+            clearInterval(intervalId);
+            // Clear the data container
+            const dataContainer = document.getElementById('dataContainer');
+            dataContainer.innerHTML = "";
+            alert('Data fetching stopped successfully.');
+          }
+
+          startFetching();
+
+          var stopButtonn = document.getElementById('stopButtonn');
+          stopButtonn.addEventListener('click', stopFetching);
+
+          var saveButton = document.getElementById('saveButton');
+          saveButton.addEventListener('click', saveData);
+
+          function saveData() {
+            const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data.csv");
+            document.body.appendChild(link);
+            link.click();
+          }
+        });
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Data',
+                data: [],
+                borderColor: 'blue',
+                borderWidth: 1,
+              },
+              {
+                label: 'Data 50',
+                data: [],
+                borderColor: 'red',
+                borderWidth: 1,
+              },
+              {
+                label: 'Data 150',
+                data: [],
+                borderColor: 'green',
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            animation: {
+              duration: 0 // Set the duration to 0 to disable animation
+            }
+          }
+        });
+
+        document.getElementById('saveButtonn').addEventListener('click', function () {
+          axios.get('http://192.168.1.105:8000/save')
+            .then(response => {
+              console.log('Response:', response.data);
+              if (response.status === 200) {
+                console.log('Save request succeeded.');
+                alert("Save successful!");
+              } else {
+                console.error('Save request failed.');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        });
+
+        document.getElementById('stopButton').addEventListener('click', function () {
+          axios.get('http://192.168.1.105:8000/stop')
+            .then(response => {
+              console.log('Response:', response.data);
+              if (response.data.status === true) {
+                console.log('Stop request succeeded.');
+                console.log('Current data:', response.data.data);
+              } else {
+                console.error('Stop request failed.');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        });
+
+      </script>
+</body>
+
+</html> -->
+
+
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Real-time Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+    integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+    crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+  <script src="paho-mqtt-min.js"></script>
+  <script src="csv.min.js"></script>
+</head>
+
+<body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          var intervalId;
+          var data = [];
+          var data50 = [];
+          var data150 = [];
+
+          var experimentName = localStorage.getItem('experimentName');
+          document.getElementById('experimentName').textContent = experimentName;
+
+          function fetchData() {
+            axios.get('http://192.168.1.105:8000/getdata')
+              .then(response => {
+                const responseData = response.data;
+                const dataContainer = document.getElementById('dataContainer');
+                dataContainer.innerHTML = `
+            <p>Data: ${responseData.data.join(', ')}</p>
+            <p>Data 50: ${responseData.data50.join(', ')}</p>
+            <p>Data 150: ${responseData.data150.join(', ')}</p>
+            <p>Detected: ${responseData.detected}</p>
+
+          `;
+
+                // Update the graph
+                updateGraph(responseData.data, responseData.data50, responseData.data150);
+                data.push(responseData.data);
+                data50.push(responseData.data50);
+                data150.push(responseData.data150);
+
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+          }
+
+          function updateGraph(data, data50, data150) {
+            chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+            chart.data.datasets[0].data = data;
+            chart.data.datasets[1].data = data50;
+            chart.data.datasets[2].data = data150;
+            chart.update();
+          }
+
+          function startFetching() {
+            fetchData();
+            intervalId = setInterval(fetchData, 1000); // Fetch data every 1 second (1000 milliseconds)
+          }
+
+          function stopFetching() {
+            clearInterval(intervalId);
+            // Clear the data container
+            const dataContainer = document.getElementById('dataContainer');
+            dataContainer.innerHTML = "";
+            alert('Data fetching stopped successfully.');
+          }
+
+          startFetching();
+
+          var stopButtonn = document.getElementById('stopButtonn');
+          stopButtonn.addEventListener('click', stopFetching);
+
+          var saveButton = document.getElementById('saveButton');
+          saveButton.addEventListener('click', saveData);
+
+          function saveData() {
+            const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data.csv");
+            document.body.appendChild(link);
+            link.click();
+          }
+        });
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Data',
+                data: [],
+                borderColor: 'blue',
+                borderWidth: 1,
+              },
+              {
+                label: 'Data 50',
+                data: [],
+                borderColor: 'red',
+                borderWidth: 1,
+              },
+              {
+                label: 'Data 150',
+                data: [],
+                borderColor: 'green',
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            animation: {
+              duration: 0 // Set the duration to 0 to disable animation
+            }
+          }
+        });
+
+        document.getElementById('saveButtonn').addEventListener('click', function () {
+          axios.get('http://192.168.1.105:8000/save')
+            .then(response => {
+              console.log('Response:', response.data);
+              if (response.status === 200) {
+                console.log('Save request succeeded.');
+                alert("Save successful!");
+              } else {
+                console.error('Save request failed.');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        });
+
+        document.getElementById('stopButton').addEventListener('click', function () {
+          axios.get('http://192.168.1.105:8000/stop')
+            .then(response => {
+              console.log('Response:', response.data);
+              if (response.data.status === true) {
+                console.log('Stop request succeeded.');
+                console.log('Current data:', response.data.data);
+              } else {
+                console.error('Stop request failed.');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        });
+
+      </script>
+</body>
+
+</html> -->
+
+
+  <!-- <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Real-time Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+      integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+      crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+    <script src="paho-mqtt-min.js"></script>
+    <script src="csv.min.js"></script>
+  </head>
+
+  <body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var intervalId;
+        var data = [];
+        var data50 = [];
+        var data150 = [];
+        var diff_values_indices = [];
+
+        var experimentName = localStorage.getItem('experimentName');
+        document.getElementById('experimentName').textContent = experimentName;
+
+        function fetchData() {
+          axios.get('http://192.168.1.100:8000/getdata')
+            .then(response => {
+              const responseData = response.data;
+              const dataContainer = document.getElementById('dataContainer');
+              dataContainer.innerHTML = `
+            <p>Data: ${responseData.data.join(', ')}</p>
+            <p>Data 50: ${responseData.data50.join(', ')}</p>
+            <p>Data 150: ${responseData.data150.join(', ')}</p>
+            <p>Detected: ${responseData.detected}</p>
+            <p>MST: ${responseData.diff_values_indices.join(', ')}</p>
+
+          `;
+
+              // Update the graph
+              updateGraph(responseData.data, responseData.data50, responseData.data150, responseData.diff_values_indices);
+              data.push(responseData.data);
+              data50.push(responseData.data50);
+              data150.push(responseData.data150);
+              diff_values_indices.push(responseData.diff_values_indices);
+
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+
+        function updateGraph(data, data50, data150, diff_values_indices) {
+          chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+          chart.data.datasets[0].data = data;
+          chart.data.datasets[1].data = data50;
+          chart.data.datasets[2].data = data150;
+          updateDiffValuesIndices(diff_values_indices);
+          chart.update();
+        }
+
+        function updateDiffValuesIndices(diff_values_indices) {
+          chart.data.datasets[3].data = diff_values_indices;
+        }
+
+        function startFetching() {
+          fetchData();
+          intervalId = setInterval(fetchData, 1000); // Fetch data every 1 second (1000 milliseconds)
+        }
+
+        function stopFetching() {
+          clearInterval(intervalId);
+          // Clear the data container
+          const dataContainer = document.getElementById('dataContainer');
+          dataContainer.innerHTML = "";
+          alert('Data fetching stopped successfully.');
+        }
+
+        startFetching();
+
+        var stopButtonn = document.getElementById('stopButtonn');
+        stopButtonn.addEventListener('click', stopFetching);
+
+        var saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveData);
+
+        function saveData() {
+          const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "data.csv");
+          document.body.appendChild(link);
+          link.click();
+        }
+      });
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Data',
+              data: [],
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 50',
+              data: [],
+              borderColor: 'red',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 150',
+              data: [],
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+            {
+              label: 'Diff Values Indices',
+              data: [],
+              borderColor: 'purple',
+              borderWidth: 1,
+              fill: false, // Set fill to false to disable filling the area under the line
+              pointRadius: 5, // Set the point radius to make the data points more visible
+            },
+          ],
+        },
+        options: {
+          animation: {
+            duration: 0, // Set the duration to 0 to disable animation
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              position: 'bottom',
+              ticks: {
+                stepSize: 1,
+              },
+            },
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      document.getElementById('saveButtonn').addEventListener('click', function () {
+        axios.get('http://192.168.1.100:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("Save successful!");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('stopButton').addEventListener('click', function () {
+        axios.get('http://192.168.1.100:8000/stop')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.data.status === true) {
+              console.log('Stop request succeeded.');
+              console.log('Current data:', response.data.data);
+            } else {
+              console.error('Stop request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+    </script>
+  </body>
+
+  </html> -->
+
+
+
+  <!-- <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Real-time Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+      integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+      crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+    <script src="paho-mqtt-min.js"></script>
+    <script src="csv.min.js"></script>
+  </head>
+
+  <body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var intervalId;
+        var data = [];
+        var data50 = [];
+        var data150 = [];
+        var diff_values_indices = [];
+
+        var experimentName = localStorage.getItem('experimentName');
+        document.getElementById('experimentName').textContent = experimentName;
+
+        function fetchData() {
+          axios.get('http://192.168.1.100:8000/getdata')
+            .then(response => {
+              const responseData = response.data;
+              const dataContainer = document.getElementById('dataContainer');
+              dataContainer.innerHTML = `
+            <p>Data: ${responseData.data.join(', ')}</p>
+            <p>Data 50: ${responseData.data50.join(', ')}</p>
+            <p>Data 150: ${responseData.data150.join(', ')}</p>
+            <p>Detected: ${responseData.detected}</p>
+            <p>MST: ${responseData.diff_values_indices.join(', ')}</p>
+
+          `;
+
+              // Update the graph
+              updateGraph(responseData.data, responseData.data50, responseData.data150, responseData.diff_values_indices);
+              data.push(responseData.data);
+              data50.push(responseData.data50);
+              data150.push(responseData.data150);
+              diff_values_indices.push(responseData.diff_values_indices);
+
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+
+        function updateGraph(data, data50, data150, diff_values_indices) {
+          chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+          chart.data.datasets[0].data = data;
+          chart.data.datasets[1].data = data50;
+          chart.data.datasets[2].data = data150;
+          chart.data.datasets[3].data = diff_values_indices;
+          chart.update();
+        }
+
+        function startFetching() {
+          fetchData();
+          intervalId = setInterval(fetchData, 1000); // Fetch data every 1 second (1000 milliseconds)
+        }
+
+        function stopFetching() {
+          clearInterval(intervalId);
+          // Clear the data container
+          const dataContainer = document.getElementById('dataContainer');
+          dataContainer.innerHTML = "";
+          alert('Data fetching stopped successfully.');
+        }
+
+        startFetching();
+
+        var stopButtonn = document.getElementById('stopButtonn');
+        stopButtonn.addEventListener('click', stopFetching);
+
+        var saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveData);
+
+        function saveData() {
+          const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "data.csv");
+          document.body.appendChild(link);
+          link.click();
+        }
+      });
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Data',
+              data: [],
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 50',
+              data: [],
+              borderColor: 'red',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 150',
+              data: [],
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+            {
+              label: 'Diff Values Indices',
+              data: [],
+              borderColor: 'purple',
+              borderWidth: 1,
+              fill: false, // Set fill to false to disable filling the area under the line
+              pointRadius: 5, // Set the point radius to make the data points more visible
+            },
+          ],
+        },
+        options: {
+          animation: {
+            duration: 0, // Set the duration to 0 to disable animation
+          },
+          // scales: {
+          //   x: {
+          //     type: 'linear',
+          //     position: 'bottom',
+          //     ticks: {
+          //       stepSize: 1,
+          //     },
+          //   },
+          //   y: {
+          //     beginAtZero: true,
+          //   },
+          // },
+        },
+      });
+
+      document.getElementById('saveButtonn').addEventListener('click', function () {
+        axios.get('http://192.168.1.100:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("Save successful!");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('stopButton').addEventListener('click', function () {
+        axios.get('http://192.168.1.100:8000/stop')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.data.status === true) {
+              console.log('Stop request succeeded.');
+              console.log('Current data:', response.data.data);
+            } else {
+              console.error('Stop request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+    </script>
+  </body>
+
+  </html> -->
+
+
+
+  <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Real-time Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+      integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+      crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+    <script src="paho-mqtt-min.js"></script>
+    <script src="csv.min.js"></script>
+  </head>
+
+  <body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var intervalId;
+        var data = [];
+        var data50 = [];
+        var data150 = [];
+        var diff_values_indices = [];
+        var totalIndices = [];
+
+        var experimentName = localStorage.getItem('experimentName');
+        document.getElementById('experimentName').textContent = experimentName;
+
+        function fetchData() {
+          axios.get('http://192.168.1.101:8000/getdata')
+            .then(response => {
+              const responseData = response.data;
+              const dataContainer = document.getElementById('dataContainer');
+              dataContainer.innerHTML = `
+            <p>Data: ${responseData.data.join(', ')}</p>
+            <p>Data 50: ${responseData.data50.join(', ')}</p>
+            <p>Data 150: ${responseData.data150.join(', ')}</p>
+            <p>Detected: ${responseData.detected}</p>
+            <p>MST: ${responseData.diff_values_indices.join(', ')}</p>
+
+          `;
+
+              // Update the graph
+              updateGraph(responseData.data, responseData.data50, responseData.data150, responseData.diff_values_indices);
+              data.push(responseData.data);
+              data50.push(responseData.data50);
+              data150.push(responseData.data150);
+              diff_values_indices.push(responseData.diff_values_indices);
+
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+
+        // function updateGraph(data, data50, data150, diff_values_indices) {
+        //   chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+        //   chart.data.datasets[0].data = data;
+        //   chart.data.datasets[1].data = data50;
+        //   chart.data.datasets[2].data = data150;
+
+        //   // Create an array to store the counts of data50 and data150
+        //   var diff_values_counts = Array.from({ length: data.length }, () => 0);
+
+        //   // Set diff_values_indices to a constant value of 100 in the Y-axis
+        //   for (var i = 0; i < diff_values_indices.length; i++) {
+        //     var index = diff_values_indices[i];
+        //     if (index < data.length) {
+        //       diff_values_counts[index] = 100;
+        //     }
+        //   }
+
+        //   // Set the counts as the data for the 'Diff Values Indices' dataset
+        //   chart.data.datasets[3].data = diff_values_counts;
+        //   chart.update();
+        // }
+
+
+        function updateGraph(data, data50, data150, diff_values_indices) {
+          chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+          chart.data.datasets[0].data = data;
+          chart.data.datasets[1].data = data50;
+          chart.data.datasets[2].data = data150;
+
+          // Create an array to store the counts of data50 and data150
+          var diff_values_counts = Array.from({ length: data.length }, () => 0);
+
+          // Count the occurrences of data50 and data150 in each index of diff_values_indices
+          for (var i = 0; i < diff_values_indices.length; i++) {
+            var index = diff_values_indices[i];
+            if (index < data.length) {
+              diff_values_counts[index]++;
+            }
+          }
+
+          // Set the counts as the data for the 'Diff Values Indices' dataset
+          chart.data.datasets[3].data = diff_values_counts;
+          chart.update();
+
+          // Check if all 3 values are present in diff_values_indices
+          // if (diff_values_indices.length >= 3) {
+          //   // Redirect to the result page
+          //   window.location.href = '/resultpage';
+
+          //   // Save data automatically
+          //   saveDataAutomatically();
+          // }
+
+          checkAndRedirect(diff_values_indices);
+        }
+
+        // Function to check if diff_values_indices has 3 values and redirect if true
+        function checkAndRedirect(diff_values_indices) {
+          if (diff_values_indices.length >= 3) {
+
+            alert('เสร็จสิ้นการทำงานเรียบร้อยแล้ว');
+
+            window.location.href = '/home';
+            saveDataAutomatically();
+          }
+
+        }
+
+
+
+        function startFetching() {
+          fetchData();
+          intervalId = setInterval(fetchData, 1000); // Fetch data every 1 second (1000 milliseconds)
+        }
+
+        function stopFetching() {
+          clearInterval(intervalId);
+          // Clear the data container
+          const dataContainer = document.getElementById('dataContainer');
+          dataContainer.innerHTML = "";
+          alert('Data fetching stopped successfully.');
+        }
+
+        startFetching();
+
+        var stopButtonn = document.getElementById('stopButtonn');
+        stopButtonn.addEventListener('click', stopFetching);
+
+        var saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveData);
+
+        function saveData() {
+          const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "data.csv");
+          document.body.appendChild(link);
+          link.click();
+        }
+
+
+      });
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Data',
+              data: [],
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 50',
+              data: [],
+              borderColor: 'red',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 150',
+              data: [],
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+            // {
+            //   label: 'Diff Values Indices',
+            //   data: [],
+            //   borderColor: 'purple',
+            //   borderWidth: 1,
+
+            // },
+
+            {
+              label: 'Diff Values Indices',
+              data: [],
+              borderColor: 'purple',
+              borderWidth: 1,
+              yAxisID: 'diff-values-y-axis',
+            },
+          ],
+        },
+        options: {
+          animation: {
+            duration: 0, // Set the duration to 0 to disable animation
+          },
+          // scales: {
+          //   x: {
+          //     type: 'linear',
+          //     position: 'bottom',
+          //     ticks: {
+          //       stepSize: 1,
+          //     },
+          //   },
+          //   y: {
+          //     beginAtZero: true,
+          //   },
+          // },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+            'diff-values-y-axis': {
+              position: 'right',
+              max: 1,
+              min: 0,
+            },
+          },
+        },
+      });
+
+
+      function saveDataAutomatically() {
+        axios.get('http://192.168.1.101:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("Save successful!");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      document.getElementById('saveButtonn').addEventListener('click', function () {
+        axios.get('http://192.168.1.101:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("Save successful!");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('stopButton').addEventListener('click', function () {
+        axios.get('http://192.168.1.101:8000/stop')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.data.status === true) {
+              console.log('Stop request succeeded.');
+              console.log('Current data:', response.data.data);
+            } else {
+              console.error('Stop request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+
+    </script>
+  </body>
+
+  </html>
+
+
+
+  <!-- <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Real-time Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+      integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+      crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+    <script src="paho-mqtt-min.js"></script>
+    <script src="csv.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+  </head>
+
+  <body>
+
+    <div class="text-center mt-4 margin-top: 2rem">
+      <h1>Get Data</h1><br>
+    </div>
+    <h3 style="padding-left: 20px;">Experiment Name : <span id="experimentName"></span></h3>
+    <div id="dataContainer" style="margin-top: 2rem; padding-left: 20px;">
+      <p>Loading data...</p>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <div style="text-align: center;">
+      <button id="stopButtonn" class="btn btn-warning" style="margin-top: 2rem; margin-bottom: 2rem;">Stop
+        Fetching</button>
+      <button id="stopButton" type="submit" class="btn btn-danger">Stop</button>
+      <button id="saveButtonn" class="btn btn-success">Save</button>
+      <button id="saveButton" class="btn btn-primary" style="margin-top: 2rem; margin-bottom: 2rem;">Download
+        Data</button>
+    </div>
+
+    <p class="text-center" style="margin-bottom: 2rem;">
+      <a href="/home" style="display: inline-block; margin-right: 10px;">Back to home</a>
+      <a href="/start" style="display: inline-block; margin-right: 10px;">Back to Start Page</a>
+      <a href="/resultpage" style="display: inline-block;">Result Page</a>
+    </p>
+
+    <div class="modal" id="exampleModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Process Finished</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>ข้อความที่คุณต้องการแสดงใน Modal นี้</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeButton">Close</button>
+            <button type="button" class="btn btn-success" id="saveButtonn">Save</button>
+            <button type="button" class="btn btn-primary" id="saveData">Download CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var intervalId;
+        var data = [];
+        var data50 = [];
+        var data150 = [];
+        var diff_values_indices = [];
+
+        var experimentName = localStorage.getItem('experimentName');
+        document.getElementById('experimentName').textContent = experimentName;
+
+        function fetchData() {
+          axios.get('http://192.168.1.101:8000/getdata')
+            .then(response => {
+              const responseData = response.data;
+              const dataContainer = document.getElementById('dataContainer');
+              dataContainer.innerHTML = `
+            <p>Data: ${responseData.data.join(', ')}</p>
+            <p>Data 50: ${responseData.data50.join(', ')}</p>
+            <p>Data 150: ${responseData.data150.join(', ')}</p>
+            <p>Detected: ${responseData.detected}</p>
+            <p>MST: ${responseData.diff_values_indices.join(', ')}</p>
+
+          `;
+
+              // Update the graph
+              updateGraph(responseData.data, responseData.data50, responseData.data150, responseData.diff_values_indices);
+              data.push(responseData.data);
+              data50.push(responseData.data50);
+              data150.push(responseData.data150);
+              diff_values_indices.push(responseData.diff_values_indices);
+
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+
+
+
+        function updateGraph(data, data50, data150, diff_values_indices) {
+          chart.data.labels = Array.from({ length: data.length }, (_, index) => index + 1);
+          chart.data.datasets[0].data = data;
+          chart.data.datasets[1].data = data50;
+          chart.data.datasets[2].data = data150;
+
+          // Create an array to store the counts of data50 and data150
+          var diff_values_counts = Array.from({ length: data.length }, () => 0);
+
+          // Count the occurrences of data50 and data150 in each index of diff_values_indices
+          for (var i = 0; i < diff_values_indices.length; i++) {
+            var index = diff_values_indices[i];
+            if (index < data.length) {
+              diff_values_counts[index]++;
+            }
+          }
+
+          // Set the counts as the data for the 'Diff Values Indices' dataset
+          chart.data.datasets[3].data = diff_values_counts;
+          chart.update();
+
+        }
+
+
+
+        function startFetching() {
+          fetchData();
+          intervalId = setInterval(fetchData, 1000); // Fetch data every 1 second (1000 milliseconds)
+        }
+
+        function stopFetching() {
+          clearInterval(intervalId);
+          // Clear the data container
+          const dataContainer = document.getElementById('dataContainer');
+          dataContainer.innerHTML = "";
+          alert('Data fetching stopped successfully.');
+        }
+
+        startFetching();
+
+        var stopButtonn = document.getElementById('stopButtonn');
+        stopButtonn.addEventListener('click', stopFetching);
+
+        var saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', saveData);
+
+        document.getElementById('saveData').addEventListener('click', function () {
+          // function saveData() {
+          const csvContent = "data:text/csv;charset=utf-8," + data.map(row => row.join(',')).join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "data.csv");
+          document.body.appendChild(link);
+          link.click();
+        });
+
+
+      });
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Data',
+              data: [],
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 50',
+              data: [],
+              borderColor: 'red',
+              borderWidth: 1,
+            },
+            {
+              label: 'Data 150',
+              data: [],
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+            {
+              label: 'Diff Values Indices',
+              data: [],
+              borderColor: 'purple',
+              borderWidth: 1,
+
+            },
+          ],
+        },
+        options: {
+          animation: {
+            duration: 0, // Set the duration to 0 to disable animation
+          },
+          // scales: {
+          //   x: {
+          //     type: 'linear',
+          //     position: 'bottom',
+          //     ticks: {
+          //       stepSize: 1,
+          //     },
+          //   },
+          //   y: {
+          //     beginAtZero: true,
+          //   },
+          // },
+        },
+      });
+
+      var diffValuesCount = 0;
+
+      function checkDiffValuesIndices() {
+        if (diff_values_indices.length === 3) {
+          diffValuesCount++;
+          if (diffValuesCount === 1) {
+            $('#exampleModal').modal('show');
+          }
+        }
+      }
+
+      diff_values_indices.addEventListener('change', checkDiffValuesIndices);
+
+
+      document.getElementById('saveButtonn').addEventListener('click', function () {
+        axios.get('http://192.168.1.101:8000/save')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+              console.log('Save request succeeded.');
+              alert("Save successful!");
+            } else {
+              console.error('Save request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('stopButton').addEventListener('click', function () {
+        axios.get('http://192.168.1.101:8000/stop')
+          .then(response => {
+            console.log('Response:', response.data);
+            if (response.data.status === true) {
+              console.log('Stop request succeeded.');
+              console.log('Current data:', response.data.data);
+            } else {
+              console.error('Stop request failed.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+
+      document.getElementById('closeButton').addEventListener('click', function () {
+        window.location.href = '/home';
+      });
+
+    </script>
+  </body>
+
+  </html> -->

@@ -1,0 +1,246 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <title>Receipt example</title>
+</head>
+<style>
+    * {
+        font-size: 12px;
+        font-family: 'Times New Roman';
+    }
+
+    td,
+    th,
+    tr,
+    table {
+        border-top: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    td.description,
+    th.description {
+        width: 75px;
+        max-width: 75px;
+    }
+
+    td.quantity,
+    th.quantity {
+        width: 40px;
+        max-width: 40px;
+        word-break: break-all;
+    }
+
+    td.price,
+    th.price {
+        width: 40px;
+        max-width: 40px;
+        word-break: break-all;
+    }
+
+    .centered {
+        text-align: center;
+        align-content: center;
+    }
+
+    .ticket {
+        width: 155px;
+        max-width: 155px;
+    }
+
+    img {
+        max-width: inherit;
+        width: inherit;
+    }
+
+    @media print {
+
+        .hidden-print,
+        .hidden-print * {
+            display: none !important;
+        }
+    }
+</style>
+
+<body>
+    <div class="ticket">
+        <img src="images/noorat.png" alt="Logo" style="width: 150px; height: 150px;">
+        <h3 class="centered" style="margin-top: 1rem;">Experiment Name</h3>
+        <p class="centered">timestamp
+        <table>
+            <thead>
+                <tr>
+                    <hr>
+                    <p class="description" style="font-weight: bold; text-align: center;">DATA</p>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <hr>
+                    <p class="description">LOVE U RASPBERRY PI</p>
+                </tr>
+                <tr>
+                    <hr>
+                    <p class="description" style="font-weight: bold; text-align: center;">GRAPH</p>
+                </tr>
+            </tbody>
+        </table>
+        <br><br><br>
+        <p class="centered">Mai me wan krkmd!</p>
+    </div>
+    <button id="btnPrint" class="hidden-print" style="margin-left: 60px;">Print</button>
+    <script src="script.js"></script>
+</body>
+
+</html> -->
+
+
+<!-- <body>
+    <div class="ticket" style="text-align: center;">
+        <img src="images/noorat.png" alt="Logo" style="width: 150px; height: 150px;">
+        <h3 class="centered" style="margin-top: 1rem;">Experiment Name</h3>
+        <p class="centered">timestamp</p>
+        <table>
+            <thead>
+                <tr>
+                    <hr>
+                    <p class="description" style="font-weight: bold; text-align: center;">DATA</p>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <hr>
+                    <p class="description" id="fileContent"></p>
+                </tr>
+                <tr>
+                    <hr>
+                    <p class="description" style="font-weight: bold; text-align: center;">GRAPH</p>
+                </tr>
+            </tbody>
+        </table>
+        <br><br><br>
+        <p class="centered" id="mstData">Mai me wan krkmd!</p>
+    </div>
+    <button id="btnPrint" class="hidden-print" style="text-align: center;">Print</button>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Extract the id from the URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        // Fetch the file data using the id
+        getFileData(id);
+
+        function getFileData(id) {
+            axios.get(`http://192.168.1.27:8000/open/${id}`)
+                .then(response => {
+                    var data = response.data.data;
+                    var mstData = response.data.mst;
+
+                    document.getElementById("fileContent").textContent = data;
+                    document.getElementById("mstData").textContent = mstData;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        var btnPrint = document.getElementById("btnPrint");
+        btnPrint.addEventListener("click", function () {
+            window.print();
+        });
+    </script>
+</body>
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Receipt example</title>
+</head>
+<style>
+    /* CSS styles */
+
+    /* ... */
+
+</style>
+
+<body>
+    <div class="ticket" style="text-align: center;">
+        <img src="images/noorat.png" alt="Logo" style="width: 150px; height: 150px;">
+        <h3 class="centered" style="margin-top: 1rem;">Experiment Name</h3>
+        <p class="centered">timestamp</p>
+                <hr>
+                <p class="description" style="font-weight: bold; text-align: center;">DATA</p>
+                <hr>
+                <p class="description" id="fileContent"></p>
+                
+                <p class="description" style="font-weight: bold; text-align: center;">GRAPH</p>
+        <br><br><br>
+        <p class="centered" id="mstData">Mai me wan krkmd!</p>
+    </div>
+    <button id="btnPrint" class="hidden-print" style="margin-left: 60px;">Print</button>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Extract the id from the URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        // Fetch the file data using the id
+        getFileData(id);
+
+        function getFileData(id) {
+            axios.get(`http://192.168.1.27:8000/open/${id}`)
+                .then(response => {
+                    var data = response.data.data;
+                    var mstData = response.data.mst;
+
+                    document.getElementById("fileContent").textContent = data;
+                    document.getElementById("mstData").textContent = mstData;
+
+                    plotGraph(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function plotGraph(data) {
+            const dataArray = data.split(',').map(Number);
+
+            const ctx = document.createElement('canvas');
+            ctx.id = 'myChart';
+            document.body.appendChild(ctx);
+
+            const myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dataArray.map((_, index) => index + 1),
+                    datasets: [{
+                        label: 'Data',
+                        data: dataArray,
+                        borderColor: 'blue',
+                        borderWidth: 1,
+                    }],
+                },
+            });
+        }
+
+        var btnPrint = document.getElementById("btnPrint");
+        btnPrint.addEventListener("click", function () {
+            window.print();
+        });
+    </script>
+</body>
+</html> -->
+
+

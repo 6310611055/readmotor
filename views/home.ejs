@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+      <style>
+            /* Modal styles */
+            .modal {
+                  display: none;
+                  position: fixed;
+                  z-index: 1;
+                  left: 0;
+                  top: 0;
+                  width: 100%;
+                  height: 100%;
+                  overflow: auto;
+                  background-color: rgba(0, 0, 0, 0.4);
+            }
+
+            .modal-content {
+                  background-color: #fefefe;
+                  margin: 15% auto;
+                  padding: 20px;
+                  border: 1px solid #888;
+                  width: 30%;
+            }
+
+            .close {
+                  color: #aaa;
+                  float: right;
+                  font-size: 20px;
+                  font-weight: bold;
+            }
+
+            .close:hover,
+            .close:focus {
+                  color: black;
+                  text-decoration: none;
+                  cursor: pointer;
+            }
+
+            .background {
+                  position: relative;
+                  width: 100%;
+                  height: 100vh;
+                  z-index: 1;
+            }
+
+            .background::before {
+                  content: "";
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background-image: url("images/bg2.jpg");
+                  background-size: cover;
+                  background-position: center;
+                  background-repeat: no-repeat;
+                  filter: blur(10px);
+                  z-index: -1;
+            }
+
+            .fade-in-text {
+                  animation: fadeIn 3s;
+                  -webkit-animation: fadeIn 3s;
+                  -moz-animation: fadeIn 3s;
+                  -o-animation: fadeIn 3s;
+                  -ms-animation: fadeIn 3s;
+            }
+
+            @keyframes fadeIn {
+                  0% {
+                        opacity: 0;
+                  }
+
+                  100% {
+                        opacity: 1;
+                  }
+            }
+
+            @-moz-keyframes fadeIn {
+                  0% {
+                        opacity: 0;
+                  }
+
+                  100% {
+                        opacity: 1;
+                  }
+            }
+
+            @-webkit-keyframes fadeIn {
+                  0% {
+                        opacity: 0;
+                  }
+
+                  100% {
+                        opacity: 1;
+                  }
+            }
+
+            @-o-keyframes fadeIn {
+                  0% {
+                        opacity: 0;
+                  }
+
+                  100% {
+                        opacity: 1;
+                  }
+            }
+
+            @-ms-keyframes fadeIn {
+                  0% {
+                        opacity: 0;
+                  }
+
+                  100% {
+                        opacity: 1;
+                  }
+            }
+      </style>
+</head>
+
+<body>
+      <%- include('header.ejs') %>
+            <div class="background">
+                  <div class="text-center">
+                        <br><br><br>
+                        <div class="fade-in-text">
+                              <!-- <h1 style="font-size: 100px; font-family:'Times New Roman', Times, serif;">MTEC</h1>
+                              <br></br> -->
+                              <br><br>
+                              <!-- <p style="font-family: Raleway-SemiBold;">MECHANICAL STABILITY TIME</p><br></br> -->
+                              <div class="container-xxl  hero-header">
+                                    <div class="container px-lg-5">
+                                      <div class="row g-5 align-items-end">
+                                        <div class="col-lg-6 text-center text-lg-start">
+                                          <h1 class="text-white mb-4 animated slideInDown" style="font-size: 90px;">MTEC</h1>
+                                          <h3 class="text-white mb-4 animated slideInDown">Mechanical Stability Time</h3>
+                                          <p class="text-white pb-3 animated slideInDown">After meticulous engineering and precise calculations, the towering skyscraper stood tall, boasting its mechanical stability time of over a century, a testament to human ingenuity and the art of construction.</p>
+                                          <button id="testButton" class="btn btn-success py-sm-3 px-sm-5 rounded-pill me-3 animated slideInLeft">Test</button> <a href="/searchdata" class="btn btn-light py-sm-3 px-sm-5 rounded-pill animated slideInRight">Playback Data</a></div>
+                                        <div class="col-lg-6 text-center text-lg-start"><img class="img-fluid animated zoomIn" src="images/hero.png" alt="website template image"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                              <!-- <button id="testButton" class="btn btn-success">Test</button>
+                              <a href="/searchdata">
+                                    <button class="btn btn-success">Playback Data</button>
+                              </a> -->
+                        </div>      
+                  </div>
+
+
+                  <div id="filenameModal" class="modal">
+                        <div class="modal-content" style="background-color: lightyellow;">
+                              <span class="close">&times;</span>
+                              <div class="text-center mt-4">
+                                    <h1 style="font-size: 24px; color: black; font-family: Raleway-SemiBold;">Please
+                                          Enter the Experiment Name</h1>
+                                    <p style="color: red; font-size: 12px; margin-top: 10px;">*Leave it blank to
+                                          automatically set as the current date and time</p>
+                                    <form class="mt-4" id="filenameForm">
+                                          <div class="mb-3" style="margin-top: 20px;">
+                                                <!-- <label for="name" style="font-size: 16px; color: #666;">Name:</label><br> -->
+                                                <input type="text" id="name" name="name" placeholder="Enter Name"
+                                                      style="width: 300px; padding: 6px 10px; font-size: 16px; border-radius: 20px;">
+                                          </div>
+                                          <div style="margin-top: 30px;">
+                                                <button type="submit" class="btn btn-primaryy"
+                                                      style="padding: 8px 16px; font-size: 16px;">Submit</button>
+                                                <a href="/home" class="btn btn-dangerr"
+                                                      style="padding: 8px 16px; font-size: 16px; margin-left: 10px;">Cancel</a>
+                                          </div>
+                                    </form>
+                              </div>
+                        </div>
+                  </div>
+
+            </div>
+
+            <%- include('footer.ejs') %>
+                  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+                  <script>
+                        var testButton = document.getElementById('testButton');
+                        testButton.addEventListener('click', openModal);
+
+                        var modal = document.getElementById('filenameModal');
+                        var closeModal = document.getElementsByClassName('close')[0];
+
+                        closeModal.addEventListener('click', function () {
+                              modal.style.display = 'none';
+                        });
+
+                        window.addEventListener('click', function (event) {
+                              if (event.target == modal) {
+                                    modal.style.display = 'none';
+                              }
+                        });
+
+                        document.getElementById('filenameForm').addEventListener('submit', function (event) {
+                              event.preventDefault();
+
+                              var name = document.getElementById('name').value;
+
+                              if (name.trim() === '') {
+                                    var timestamp = new Date().getTime();
+                                    name = 'Experiment-' + timestamp;
+                              }
+
+                              localStorage.setItem('experimentName', name);
+
+                              var data = {
+                                    name: name,
+                              };
+
+                              axios.post('http://192.168.1.101:8000/filename', data)
+                                    .then(response => {
+                                          console.log('Response:', response.data);
+                                          window.location.href = "/start";
+                                    })
+                                    .catch(error => {
+                                          console.error('Error:', error);
+                                    });
+                        });
+
+                        function openModal() {
+                              modal.style.display = 'block';
+                        }
+                  </script>
+</body>
+
+</html>
+
+
+<!-- Filename Modal -->
+<!-- <div id="filenameModal" class="modal">
+                        <div class="modal-content">
+                              <span class="close">&times;</span>
+                              <div class="text-center mt-4">
+                                    <h1>โปรดระบุชื่อการทดลอง</h1>
+                                    <p style="color: red;">*หากเว้นว่างจะถูกตั้งเป็นวันและเวลาโดยอัตโนมัติ</p>
+                                    <form class="mt-4" id="filenameForm">
+                                          <div class="mb-3" style="margin-top: 2rem;">
+                                                <label for="name">Name:</label>
+                                                <input type="text" id="name" name="name" placeholder="Enter Name">
+                                          </div>
+                                          <div style="margin-top: 2rem;">
+                                                <button type="submit" class="btn btn-primary">Submit</button>
+                                                <a href="/home" class="btn btn-danger">Cancel</a>
+                                          </div>
+                                    </form>
+                              </div>
+                        </div>
+                  </div> -->

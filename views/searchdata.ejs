@@ -1,0 +1,1411 @@
+<%- include('header.ejs') %>
+  <!--this this this-->
+  <!-- <!DOCTYPE html>
+<html>
+<head>
+  <title>Search Data ID</title>
+</head>
+<body>
+  
+  <br>
+  <h1 class="text-center mt-4">Playback Data</h1>
+  <form style="margin-top: 4rem; text-align: center;">
+    <label for="idSelect" style="margin-bottom: 1rem;">Select Filename</label>
+    <select id="idSelect">
+      <option value="" disabled selected>Select a filename</option>
+    </select>
+  </form>
+  <br>
+
+  <div id="popupContainer" style="display: none; background-color: #f2f2f2; padding: 20px; margin-top: 20px;">
+    <h2>File ID: <span id="fileId"></span></h2>
+    <div>
+      <p>Data: <span id="fileContent" style="display: block; word-break: break-all;"></span></p>
+      <p>MST Data: <span id="mstData"></span></p>
+    </div>
+    <div>
+      <canvas id="myChart"></canvas>
+    </div>
+    <div style="margin-top: 2rem; text-align: center; margin-top: 2rem; margin-bottom: 2rem;">
+      <button id="saveButton" class="btn btn-success">Save as CSV</button>
+    </div>
+  </div>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    var idSelect = document.getElementById('idSelect');
+    var searchButton = document.getElementById('searchButton');
+    var popupContainer = document.getElementById('popupContainer');
+    var myChart = null;
+
+    axios.get('http://192.168.1.27:8000/alldata')
+      .then(response => {
+        console.log('Response:', response.data);
+        var filenames = response.data.data;
+        filenames.forEach(filename => {
+          var option = document.createElement('option');
+          option.value = filename;
+          option.text = filename;
+          idSelect.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+
+    idSelect.addEventListener('change', function() {
+      var selectedFilename = idSelect.value;
+      if (selectedFilename) {
+        var idParts = selectedFilename.split(',');
+        var fileId = idParts[0];
+
+        getFileData(fileId);
+        popupContainer.style.display = 'block';
+      }
+    });
+
+    function getFileData(id) {
+      axios.get(`http://192.168.1.27:8000/open/${id}`)
+        .then(response => {
+          var data = response.data.data;
+          var mstData = response.data.mst;
+
+          document.getElementById("fileId").textContent = id;
+          document.getElementById("fileContent").textContent = data;
+          document.getElementById("mstData").textContent = mstData;
+
+          if (myChart) {
+            myChart.destroy(); // Clear the previous chart
+          }
+
+          plotGraph(data);
+
+          console.log("File ID:", id);
+          console.log("File Content:", data);
+          console.log("MST Data:", mstData);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    function plotGraph(data) {
+      const dataArray = data.split(',').map(Number);
+
+      const ctx = document.getElementById('myChart').getContext('2d');
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dataArray.map((_, index) => index + 1),
+          datasets: [
+            {
+              label: 'Data',
+              data: dataArray,
+              borderColor: 'blue',
+              borderWidth: 1,
+            },
+          ],
+        },
+      });
+    }
+    var saveButton = document.getElementById('saveButton');
+    saveButton.addEventListener('click', saveData);
+
+    function saveData() {
+      var fileContent = document.getElementById('fileContent').textContent;
+      var dataArray = fileContent.split(',').map(Number);
+
+      var csvContent = "data:text/csv;charset=utf-8," + dataArray.join('\n');
+      var encodedUri = encodeURI(csvContent);
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html> -->
+
+
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search Data ID</title>
+</head>
+<style>
+  .background {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+
+  .background::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("images/25331.jpg");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(10px);
+    /* Apply blur effect */
+    z-index: -1;
+  }
+</style>
+
+<body>
+  
+    <div class="background">
+      <br>
+      <h1 class="text-center mt-4">Playback Data</h1>
+      <form style="margin-top: 4rem; text-align: center;">
+        <label for="idSelect" style="margin-bottom: 1rem;">Select Filename :</label>
+        <select id="idSelect">
+          <option value="" disabled selected>Select a filename</option>
+        </select>
+      </form>
+      <br>
+
+      <div id="dataContainer"
+        style="display: none; margin-top: 20px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; padding: 20px;">
+        <div style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+          <h2 style="font-size: 1.5rem; margin-bottom: 10px;">File ID: <span id="fileId"
+              style="font-weight: bold;"></span></h2>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">Data:</p>
+          <span id="fileContent" style="padding: 10px; display: block; word-break: break-all;"></span>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">MST Data:</p>
+          <pre id="mstData"
+            style="padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: auto;"></pre>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <canvas id="myChart"></canvas>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button id="saveButton" class="btn btn-success" style="margin-right: 10px;">Save as CSV</button>
+          <button id="printButton" type="submit" class="btn btn-primary" style="margin-right: 10px;">Print</button></a>
+          <button id="removeButton" class="btn btn-danger">Remove Data</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      var idSelect = document.getElementById('idSelect');
+      var dataContainer = document.getElementById('dataContainer');
+      var myChart = null;
+
+      function populateDropdown() {
+        axios.get('http://192.168.1.27:8000/alldata')
+          .then(response => {
+            console.log('Response:', response.data);
+            var filenames = response.data.data;
+            filenames.forEach(filename => {
+              var option = document.createElement('option');
+              option.value = filename;
+              option.text = filename;
+              idSelect.appendChild(option);
+            });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      idSelect.addEventListener('change', function () {
+        var selectedFilename = idSelect.value;
+        if (selectedFilename) {
+          var idParts = selectedFilename.split(',');
+          var fileId = idParts[0];
+
+          getFileData(fileId);
+          dataContainer.style.display = 'block';
+        } else {
+          // Clear the container if no filename is selected
+          document.getElementById('fileId').textContent = '';
+          document.getElementById('fileContent').textContent = '';
+          document.getElementById('mstData').textContent = '';
+          if (myChart) {
+            myChart.destroy();
+          }
+          dataContainer.style.display = 'none';
+        }
+      });
+
+      function getFileData(id) {
+        axios.get(`http://192.168.1.27:8000/open/${id}`)
+          .then(response => {
+            var data = response.data.data;
+            var mstData = response.data.mst;
+
+            document.getElementById("fileId").textContent = id;
+            document.getElementById("fileContent").textContent = data;
+            document.getElementById("mstData").textContent = mstData;
+
+            if (myChart) {
+              myChart.destroy(); // Clear the previous chart
+            }
+
+            plotGraph(data);
+
+            console.log("File ID:", id);
+            console.log("File Content:", data);
+            console.log("MST Data:", mstData);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      function plotGraph(data) {
+        const dataArray = data.split(',').map(Number);
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dataArray.map((_, index) => index + 1),
+            datasets: [
+              {
+                label: 'Data',
+                data: dataArray,
+                borderColor: 'blue',
+                borderWidth: 1,
+              },
+            ],
+          },
+        });
+      }
+
+      function saveData() {
+        var fileContent = document.getElementById('fileContent').textContent;
+        var dataArray = fileContent.split(',').map(Number);
+
+        var csvContent = "data:text/csv;charset=utf-8," + dataArray.join('\n');
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      function removeData() {
+        var id = document.getElementById('fileId').textContent;
+
+        axios.get(`http://192.168.1.27:8000/remove/${id}`)
+          .then(function (response) {
+            console.log('Response:', response);
+            if (response.status === 200) {
+              alert('Data removed successfully.');
+              // Clear the container and reset the dropdown
+              document.getElementById('fileId').textContent = '';
+              document.getElementById('fileContent').textContent = '';
+              document.getElementById('mstData').textContent = '';
+              if (myChart) {
+                myChart.destroy();
+              }
+              idSelect.selectedIndex = 0;
+              dataContainer.style.display = 'none';
+              populateDropdown();
+
+              location.reload(); // Refresh the page
+            } else {
+              alert('Failed to remove data.');
+            }
+          })
+          .catch(function (error) {
+            console.error('Error:', error);
+          });
+      }
+
+      var saveButton = document.getElementById('saveButton');
+      saveButton.addEventListener('click', saveData);
+
+      var removeButton = document.getElementById('removeButton');
+      removeButton.addEventListener('click', removeData);
+
+      var printButton = document.getElementById('printButton');
+      printButton.addEventListener('click', function () {
+        window.print();
+      });
+
+
+      // Populate the dropdown when the page loads
+      populateDropdown();
+    </script>
+</body>
+
+</html> -->
+
+
+
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search Data ID</title>
+</head>
+<style>
+  .background {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+
+  .background::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("images/25331.jpg");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(10px);
+    /* Apply blur effect */
+    z-index: -1;
+  }
+</style>
+
+<body>
+
+    <div class="background">
+      <br>
+      <h1 class="text-center mt-4">Playback Data</h1>
+      <form style="margin-top: 4rem; text-align: center;">
+        <label for="idSelect" style="margin-bottom: 1rem;">Select Filename :</label>
+        <select id="idSelect">
+          <option value="" disabled selected>Select a filename</option>
+        </select>
+      </form>
+      <br>
+
+      <div id="dataContainer"
+        style="display: none; margin-top: 20px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; padding: 20px;">
+        <div style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+          <h2 style="font-size: 1.5rem; margin-bottom: 10px;">File ID: <span id="fileId"
+              style="font-weight: bold;"></span></h2>
+          <p style="font-weight: bold;">Name: <span id="fileName"></span></p>
+          <p style="font-weight: bold;">Timestamp: <span id="fileTimestamp"></span></p>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">Data:</p>
+          <span id="fileContent" style="padding: 10px; display: block; word-break: break-all;"></span>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">MST Data:</p>
+          <pre id="mstData"
+            style="padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: auto;"></pre>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <canvas id="myChart"></canvas>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button id="saveButton" class="btn btn-success" style="margin-right: 10px;">Save as CSV</button>
+          <button id="printButton" type="submit" class="btn btn-primary" style="margin-right: 10px;">Print</button></a>
+          <button id="removeButton" class="btn btn-danger">Remove Data</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      var idSelect = document.getElementById('idSelect');
+      var dataContainer = document.getElementById('dataContainer');
+      var myChart = null;
+
+      function populateDropdown() {
+        axios.get('http://192.168.1.27:8000/alldata')
+          .then(response => {
+            console.log('Response:', response.data);
+            var filenames = response.data.data;
+            filenames.forEach(filename => {
+              var option = document.createElement('option');
+              option.value = filename;
+              option.text = filename;
+              idSelect.appendChild(option);
+            });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      idSelect.addEventListener('change', function () {
+        var selectedFilename = idSelect.value;
+        var selectedText = idSelect.options[idSelect.selectedIndex].text;
+        if (selectedFilename) {
+          var idParts = selectedFilename.split(',');
+          var fileId = idParts[0];
+
+          getFileData(fileId, selectedText);
+          dataContainer.style.display = 'block';
+        } else {
+          // Clear the container if no filename is selected
+          document.getElementById('fileId').textContent = '';
+          document.getElementById('fileName').textContent = '';
+          document.getElementById('fileTimestamp').textContent = '';
+          document.getElementById('fileContent').textContent = '';
+          document.getElementById('mstData').textContent = '';
+          if (myChart) {
+            myChart.destroy();
+          }
+          dataContainer.style.display = 'none';
+        }
+      });
+
+      function getFileData(id, selectedText) {
+        axios.get(`http://192.168.1.27:8000/open/${id}`)
+          .then(response => {
+            var data = response.data.data;
+            var mstData = response.data.mst;
+            var fileName = response.data.name;
+            var fileTimestamp = response.data.timestamp;
+
+            document.getElementById("fileId").textContent = id;
+            document.getElementById("fileContent").textContent = data;
+            document.getElementById("mstData").textContent = mstData;
+            document.getElementById("fileName").textContent = selectedText;
+            document.getElementById("fileTimestamp").textContent = fileTimestamp;
+
+            if (myChart) {
+              myChart.destroy(); // Clear the previous chart
+            }
+
+            plotGraph(data);
+
+            console.log("File ID:", id);
+            console.log("File Content:", data);
+            console.log("MST Data:", mstData);
+            console.log("Name:", fileName);
+            console.log("Timestamp:", fileTimestamp);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      function plotGraph(data) {
+        const dataArray = data.split(',').map(Number);
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dataArray.map((_, index) => index + 1),
+            datasets: [
+              {
+                label: 'Data',
+                data: dataArray,
+                borderColor: 'blue',
+                borderWidth: 1,
+              },
+            ],
+          },
+        });
+      }
+
+      function saveData() {
+        var fileContent = document.getElementById('fileContent').textContent;
+        var dataArray = fileContent.split(',').map(Number);
+
+        var csvContent = "data:text/csv;charset=utf-8," + dataArray.join('\n');
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      function removeData() {
+        var id = document.getElementById('fileId').textContent;
+
+        axios.get(`http://192.168.1.27:8000/remove/${id}`)
+          .then(function (response) {
+            console.log('Response:', response.data);
+            alert('Data removed successfully.');
+            // Clear the container
+            document.getElementById('fileId').textContent = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('fileTimestamp').textContent = '';
+            document.getElementById('fileContent').textContent = '';
+            document.getElementById('mstData').textContent = '';
+            if (myChart) {
+              myChart.destroy();
+            }
+            dataContainer.style.display = 'none';
+            idSelect.value = '';
+          })
+          .catch(function (error) {
+            console.error('Error:', error);
+            alert('Error occurred while removing data.');
+          });
+      }
+
+      populateDropdown();
+
+      var saveButton = document.getElementById('saveButton');
+      saveButton.addEventListener('click', saveData);
+
+      var removeButton = document.getElementById('removeButton');
+      removeButton.addEventListener('click', removeData);
+
+    </script>
+  </body>
+
+</html> -->
+
+
+  <!--usually use-->
+  <!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search Data ID</title>
+</head>
+<style>
+  .background {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+
+  .background::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("images/25331.jpg");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(10px);
+    /* Apply blur effect */
+    z-index: -1;
+  }
+</style>
+
+<body>
+
+  <div class="background">
+    <br>
+    <h1 class="text-center mt-4">Playback Data</h1>
+    <form style="margin-top: 4rem; text-align: center;">
+      <label for="idSelect" style="margin-bottom: 1rem;">Select Filename :</label>
+      <select id="idSelect">
+        <option value="" disabled selected>Select a filename</option>
+      </select>
+    </form>
+    <br>
+
+    <div id="dataContainer"
+      style="display: none; margin-top: 20px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; padding: 20px;">
+      <div style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 10px;">File ID: <span id="fileId"
+            style="font-weight: bold;"></span></h2>
+        <h2 style="font-size: 1.5rem;">Name: <span id="fileName" style="font-weight: bold;"></span></h2>
+        <h2 style="font-size: 1.5rem">Timestamp: <span id="fileTimestamp" style="font-weight: bold;"></span></h2>
+      </div>
+      <div style="margin-top: 10px;">
+        <p style="font-weight: bold;">Data:</p>
+        <span id="fileContent" style="padding: 10px; display: block; word-break: break-all;"></span>
+      </div>
+      <div style="margin-top: 10px;">
+        <p style="font-weight: bold;">MST Data:</p>
+        <pre id="mstData"
+          style="padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: auto;"></pre>
+      </div>
+      <div style="margin-top: 20px; text-align: center;">
+        <canvas id="myChart"></canvas>
+      </div>
+      <div style="margin-top: 20px; text-align: center;">
+        <button id="saveButton" class="btn btn-success" style="margin-right: 10px;">Save as CSV</button>
+        <button id="printButton" type="submit" class="btn btn-primary" style="margin-right: 10px;">Print</button></a>
+        <button id="removeButton" class="btn btn-danger">Remove Data</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  var idSelect = document.getElementById('idSelect');
+  var dataContainer = document.getElementById('dataContainer');
+  var myChart = null;
+
+  function populateDropdown() {
+    axios.get('http://192.168.1.102:8000/alldata')
+      .then(response => {
+        console.log('Response:', response.data);
+        var filenames = response.data.data;
+        populateDropdownOptions(filenames);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  function populateDropdownOptions(filenames) {
+    idSelect.innerHTML = ""; // Clear existing options
+
+    var defaultOption = document.createElement('option');
+    defaultOption.value = "";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.textContent = "Select a filename";
+    idSelect.appendChild(defaultOption);
+
+    filenames.forEach(filename => {
+      var option = document.createElement('option');
+      option.value = filename;
+      option.text = filename;
+      idSelect.appendChild(option);
+    });
+  }
+
+  idSelect.addEventListener('change', function () {
+    var selectedFilename = idSelect.value;
+    var selectedText = idSelect.options[idSelect.selectedIndex].text;
+    if (selectedFilename) {
+      var idParts = selectedFilename.split(',');
+      var fileId = idParts[0];
+
+      getFileData(fileId, selectedText);
+      dataContainer.style.display = 'block';
+    } else {
+      // Clear the container if no filename is selected
+      document.getElementById('fileId').textContent = '';
+      document.getElementById('fileName').textContent = '';
+      document.getElementById('fileTimestamp').textContent = '';
+      document.getElementById('fileContent').textContent = '';
+      document.getElementById('mstData').textContent = '';
+      if (myChart) {
+        myChart.destroy();
+      }
+      dataContainer.style.display = 'none';
+    }
+  });
+
+  function getFileData(id, selectedText) {
+    axios.get(`http://192.168.1.102:8000/open/${id}`)
+      .then(response => {
+        var data = response.data.data;
+        var mstData = response.data.mst;
+        var fileName = response.data.name;
+        var fileTimestamp = response.data.timestamp;
+        var data50 = response.data.data50;
+        var data150 = response.data.data150;
+
+        document.getElementById("fileId").textContent = id;
+        document.getElementById("fileContent").textContent = data;
+        document.getElementById("mstData").textContent = mstData;
+        document.getElementById("fileName").textContent = selectedText;
+        document.getElementById("fileTimestamp").textContent = fileTimestamp;
+
+        if (myChart) {
+          myChart.destroy(); // Clear the previous chart
+        }
+
+        plotGraph(data, data50, data150);
+
+        console.log("File ID:", id);
+        console.log("File Content:", data);
+        console.log("MST Data:", mstData);
+        console.log("Name:", fileName);
+        console.log("Timestamp:", fileTimestamp);
+        console.log("Data with Moving Average (50):", data50);
+        console.log("Data with Moving Average (150):", data150);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  function plotGraph(data, data50, data150) {
+    const dataArray = data.split(',').map(Number);
+    const ctx = document.getElementById('myChart').getContext('2d');
+    myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array.from({ length: dataArray.length }, (_, index) => index + 1),
+        datasets: [
+          {
+            label: 'Data',
+            data: dataArray,
+            borderColor: 'blue',
+            borderWidth: 1,
+          },
+          {
+            label: 'Moving Average (50)',
+            data: data50,
+            borderColor: 'red',
+            borderWidth: 1,
+          },
+          {
+            label: 'Moving Average (150)',
+            data: data150,
+            borderColor: 'green',
+            borderWidth: 1,
+          },
+        ],
+      },
+    });
+  }
+
+  function saveData() {
+    var fileContent = document.getElementById('fileContent').textContent;
+    var dataArray = fileContent.split(',').map(Number);
+
+    var csvContent = "data:text/csv;charset=utf-8," + dataArray.join('\n');
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "data.csv");
+    document.body.appendChild(link);
+    link.click();
+  }
+
+  function removeData() {
+    var fileId = document.getElementById('fileId').textContent;
+
+    axios.delete(`http://192.168.1.102:8000/delete/${fileId}`)
+      .then(response => {
+        console.log('Response:', response.data);
+        dataContainer.style.display = 'none';
+        populateDropdown();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  function printData() {
+    window.print();
+  }
+
+  populateDropdown();
+
+  document.getElementById("saveButton").addEventListener("click", saveData);
+  document.getElementById("removeButton").addEventListener("click", removeData);
+  document.getElementById("printButton").addEventListener("click", printData);
+</script>
+
+</body>
+</html> -->
+
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    var idSelect = document.getElementById('idSelect');
+    var dataContainer = document.getElementById('dataContainer');
+    var myChart = null;
+
+    function populateDropdown() {
+      axios.get('http://192.168.1.27:8000/alldata')
+        .then(response => {
+          console.log('Response:', response.data);
+          var filenames = response.data.data;
+          populateDropdownOptions(filenames);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    function populateDropdownOptions(filenames) {
+      idSelect.innerHTML = ""; // Clear existing options
+
+      var defaultOption = document.createElement('option');
+      defaultOption.value = "";
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
+      defaultOption.textContent = "Select a filename";
+      idSelect.appendChild(defaultOption);
+
+      filenames.forEach(filename => {
+        var option = document.createElement('option');
+        option.value = filename;
+        option.text = filename;
+        idSelect.appendChild(option);
+      });
+    }
+
+    idSelect.addEventListener('change', function () {
+      var selectedFilename = idSelect.value;
+      var selectedText = idSelect.options[idSelect.selectedIndex].text;
+      if (selectedFilename) {
+        var idParts = selectedFilename.split(',');
+        var fileId = idParts[0];
+
+        getFileData(fileId, selectedText);
+        dataContainer.style.display = 'block';
+      } else {
+        // Clear the container if no filename is selected
+        document.getElementById('fileId').textContent = '';
+        document.getElementById('fileName').textContent = '';
+        document.getElementById('fileTimestamp').textContent = '';
+        document.getElementById('fileContent').textContent = '';
+        document.getElementById('mstData').textContent = '';
+        if (myChart) {
+          myChart.destroy();
+        }
+        dataContainer.style.display = 'none';
+      }
+    });
+
+    function getFileData(id, selectedText) {
+      axios.get(`http://192.168.1.27:8000/open/${id}`)
+        .then(response => {
+          var data = response.data.data;
+          var mstData = response.data.mst;
+          var fileName = response.data.name;
+          var fileTimestamp = response.data.timestamp;
+
+          document.getElementById("fileId").textContent = id;
+          document.getElementById("fileContent").textContent = data;
+          document.getElementById("mstData").textContent = mstData;
+          document.getElementById("fileName").textContent = selectedText;
+          document.getElementById("fileTimestamp").textContent = fileTimestamp;
+
+          if (myChart) {
+            myChart.destroy(); // Clear the previous chart
+          }
+
+          plotGraph(data);
+
+          console.log("File ID:", id);
+          console.log("File Content:", data);
+          console.log("MST Data:", mstData);
+          console.log("Name:", fileName);
+          console.log("Timestamp:", fileTimestamp);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    function plotGraph(data) {
+    const dataArray = data.split(',').map(Number);
+    const windowSize1 = 50; // Moving average window size 1
+    const windowSize2 = 150; // Moving average window size 2
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array.from({ length: dataArray.length }, (_, index) => index + 1),
+        datasets: [
+          {
+            label: 'Data',
+            data: dataArray,
+            borderColor: 'blue',
+            borderWidth: 1,
+          },
+          {
+            label: 'Moving Average (50)',
+            data: calculateMovingAverage(dataArray, windowSize1),
+            borderColor: 'red',
+            borderWidth: 1,
+          },
+          {
+            label: 'Moving Average (150)',
+            data: calculateMovingAverage(dataArray, windowSize2),
+            borderColor: 'green',
+            borderWidth: 1,
+          },
+        ],
+      },
+    });
+  }
+
+  function calculateMovingAverage(dataArray, windowSize) {
+    const movingAverages = [];
+    for (let i = 0; i < dataArray.length; i++) {
+      let sum = 0;
+      let count = 0;
+      for (let j = i; j >= 0 && count < windowSize; j--) {
+        sum += dataArray[j];
+        count++;
+      }
+      const average = sum / count;
+      movingAverages.push(average);
+    }
+    return movingAverages;
+  }
+
+    function saveData() {
+      var fileContent = document.getElementById('fileContent').textContent;
+      var dataArray = fileContent.split(',').map(Number);
+
+      var csvContent = "data:text/csv;charset=utf-8," + dataArray.join('\n');
+      var encodedUri = encodeURI(csvContent);
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "data.csv");
+      document.body.appendChild(link);
+      link.click();
+    }
+
+    function removeData() {
+      var fileId = document.getElementById('fileId').textContent;
+
+      axios.delete(`http://192.168.1.27:8000/delete/${fileId}`)
+        .then(response => {
+          console.log('Response:', response.data);
+          dataContainer.style.display = 'none';
+          populateDropdown();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    function printData() {
+      window.print();
+    }
+
+    populateDropdown();
+
+    document.getElementById("saveButton").addEventListener("click", saveData);
+    document.getElementById("removeButton").addEventListener("click", removeData);
+    document.getElementById("printButton").addEventListener("click", printData);
+  </script> -->
+
+
+
+  <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Search Data ID</title>
+  </head>
+  <style>
+    .background {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .background::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("images/25331.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      filter: blur(10px);
+      /* Apply blur effect */
+      z-index: -1;
+    }
+  </style>
+
+  <body>
+
+    <div class="background">
+      <br>
+      <h1 class="text-center mt-4">Playback Data</h1>
+      <form style="margin-top: 4rem; text-align: center;">
+        <label for="idSelect" style="margin-bottom: 1rem;">Select Filename :</label>
+        <select id="idSelect">
+          <option value="" disabled selected>Select a filename</option>
+        </select>
+      </form>
+      <br>
+
+      <div id="dataContainer"
+        style="display: none; margin-top: 20px; border: 1px solid #ccc; border-radius: 4px; background-color: #e4f8f2; padding: 20px;">
+        <div style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+          <h2 style="font-size: 1.5rem; margin-bottom: 10px;">File ID: <span id="fileId"
+              style="font-weight: bold;"></span></h2>
+          <h2 style="font-size: 1.5rem;">Name: <span id="fileName" style="font-weight: bold;"></span></h2>
+          <h2 style="font-size: 1.5rem">Timestamp: <span id="fileTimestamp" style="font-weight: bold;"></span></h2>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">Data:</p>
+          <span id="fileContent" style="padding: 10px; display: block; word-break: break-all;"></span>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">Data 50:</p>
+          <span id="fileContent50" style="padding: 10px; display: block; word-break: break-all;"></span>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">Data 150:</p>
+          <span id="fileContent150" style="padding: 10px; display: block; word-break: break-all;"></span>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="font-weight: bold;">MST Data:</p>
+          <pre id="diffValuesIndicesContainer"
+            style="padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 4px; overflow: auto;"></pre>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <canvas id="myChart"></canvas>
+        </div>
+
+        <form style="margin-top: 1.2rem; text-align: center;" id="variableForm">
+          <label for="variableInput" style="margin-bottom: 1rem;">Enter Variable Value:</label>
+          <input type="text" id="variableInput" name="variableInput" placeholder="Enter a value">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="button" class="btn btn-danger" onclick="resetVariable()">Reset</button>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center;">
+          <button id="saveButton1" class="btn btn-success" style="margin-right: 10px;">Save as CSV (Raw)</button>
+          <button id="saveButton" class="btn btn-success" style="margin-right: 10px;">Save as CSV</button>
+          <button id="printButton" type="submit" class="btn btn-primary" style="margin-right: 10px;">Print</button></a>
+          <button id="removeButton" class="btn btn-danger">Remove Data</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+      var idSelect = document.getElementById('idSelect');
+      var dataContainer = document.getElementById('dataContainer');
+      var myChart = null;
+
+      function populateDropdown() {
+        axios.get('http://192.168.1.101:8000/alldata')
+          .then(response => {
+            console.log('Response:', response.data);
+            var filenames = response.data.data;
+            populateDropdownOptions(filenames);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      function populateDropdownOptions(filenames) {
+        idSelect.innerHTML = ""; // Clear existing options
+
+        var defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        defaultOption.textContent = "Select a filename";
+        idSelect.appendChild(defaultOption);
+
+        filenames.forEach(filename => {
+          var option = document.createElement('option');
+          option.value = filename;
+          option.text = filename;
+          idSelect.appendChild(option);
+        });
+      }
+
+      idSelect.addEventListener('change', function () {
+        var selectedFilename = idSelect.value;
+        var selectedText = idSelect.options[idSelect.selectedIndex].text;
+        if (selectedFilename) {
+          var idParts = selectedFilename.split(',');
+          var fileId = idParts[0];
+
+          getFileData(fileId, selectedText);
+          dataContainer.style.display = 'block';
+        } else {
+          // Clear the container if no filename is selected
+          document.getElementById('fileId').textContent = '';
+          document.getElementById('fileName').textContent = '';
+          document.getElementById('fileTimestamp').textContent = '';
+          document.getElementById('fileContent').textContent = '';
+          document.getElementById('fileContent50').textContent = '';
+          document.getElementById('fileContent150').textContent = '';
+          if (myChart) {
+            myChart.destroy();
+          }
+          dataContainer.style.display = 'none';
+        }
+      });
+
+      function getFileData(id, selectedText) {
+        axios.get(`http://192.168.1.101:8000/open/${id}`)
+          .then(response => {
+            // Retrieve the required data from the response
+            var data = response.data.data;
+            var data50 = response.data.data50;
+            var data150 = response.data.data150;
+            var fileName = response.data.name;
+            var fileTimestamp = response.data.timestamp;
+            var diffValuesIndices = response.data.diff_values_indices;
+
+            // Display the retrieved data on the page
+            document.getElementById("fileId").textContent = id;
+            document.getElementById("fileContent").textContent = data;
+            document.getElementById("fileContent50").textContent = data50;
+            document.getElementById("fileContent150").textContent = data150;
+            document.getElementById("fileName").textContent = selectedText;
+            document.getElementById("fileTimestamp").textContent = fileTimestamp;
+            document.getElementById("diffValuesIndicesContainer").textContent = diffValuesIndices.join(', ');
+
+            if (myChart) {
+              myChart.destroy(); // Clear the previous chart
+            }
+
+            plotGraph(data, data50, data150, diffValuesIndices);
+
+            console.log("File ID:", id);
+            console.log("File Content:", data);
+            console.log("Name:", fileName);
+            console.log("Timestamp:", fileTimestamp);
+            console.log("Diff Values Indices:", diffValuesIndices);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+
+      function plotGraph(data, data50, data150, diffValuesIndices) {
+        const dataArray = data.map(Number);
+        const data50Array = data50.map(Number);
+        const data150Array = data150.map(Number);
+
+        if (myChart) {
+          myChart.destroy(); // Clear the previous chart
+        }
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dataArray.map((_, index) => index + 1),
+            datasets: [{
+              label: 'Data',
+              data: dataArray,
+              borderColor: 'blue',
+              borderWidth: 1,
+            }, {
+              label: 'Data50',
+              data: data50Array,
+              borderColor: 'red',
+              borderWidth: 1,
+            }, {
+              label: 'Data150',
+              data: data150Array,
+              borderColor: 'green',
+              borderWidth: 1,
+            },
+            {
+              label: 'Diff Values Indices (Data50)',
+              data: diffValuesIndices.map((index) => ({
+                x: index + 1,
+                y: data50Array[index],
+              })),
+              borderColor: 'orange',
+              borderWidth: 1,
+              pointStyle: 'circle',
+              radius: 4,
+              pointBackgroundColor: 'orange',
+              pointBorderWidth: 1,
+              pointBorderColor: 'orange',
+            },
+            {
+              label: 'Diff Values Indices (Data150)',
+              data: diffValuesIndices.map((index) => ({
+                x: index + 1,
+                y: data150Array[index],
+              })),
+              borderColor: 'purple',
+              borderWidth: 1,
+              pointStyle: 'circle',
+              radius: 4,
+              pointBackgroundColor: 'purple',
+              pointBorderWidth: 1,
+              pointBorderColor: 'purple',
+            },],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                ticks: {
+                  autoSkip: false,
+                  callback: function (value, index) {
+                    if (diffValuesIndices.includes(index)) {
+                      return value;
+                    }
+                    return null;
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+
+      function saveData1() {
+        var fileContent = document.getElementById('fileContent').textContent;
+        var dataArray = fileContent.split(',').map(Number);
+
+        var csvContent = "data:text/csv;charset=utf-8," + dataArray.join('\n');
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "data.csv");
+        document.body.appendChild(link);
+        link.click();
+      }
+
+
+      function saveData() {
+        var fileContent = document.getElementById('fileContent').textContent;
+        var fileContent50 = document.getElementById('fileContent50').textContent;
+        var fileContent150 = document.getElementById('fileContent150').textContent;
+
+        var dataArrayr = fileContent.split(',').map(Number);
+        var dataArray50 = fileContent50.split(',').map(Number);
+        var dataArray150 = fileContent150.split(',').map(Number);
+
+        var csvContent = 'data,data50,data150\n';
+        for (var i = 0; i < dataArrayr.length; i++) {
+          csvContent += dataArrayr[i] + ',' + dataArray50[i] + ',' + dataArray150[i] + '\n';
+        }
+
+        var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'data.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+
+
+      function removeData() {
+        var fileId = document.getElementById('fileId').textContent;
+
+        axios.get(`http://192.168.1.101:8000/remove/${fileId}`)
+          .then(response => {
+            console.log('Response:', response.data);
+            dataContainer.style.display = 'none';
+            populateDropdown();
+            alert('Remove Successfully!')
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+
+      function printData() {
+        window.print();
+      }
+
+      function editVariable(id) {
+            if (id === "reset") {
+                axios.get(`http://192.168.1.101:8000/variable/reset`)
+                    .then(response => {
+                        console.log(response.data);
+                        window.location.reload(); // Reload the page after successful API call
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            } else {
+                axios.get(`http://192.168.1.101:8000/variable/${id}`)
+                    .then(response => {
+                        console.log(response.data);
+                        window.location.reload(); 
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+        }
+
+        function resetVariable() {
+            editVariable("reset"); // Call editVariable with "reset" as the id to initiate reset
+        }
+
+        document.getElementById("variableForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            var inputValue = document.getElementById('variableInput').value;
+            editVariable(inputValue); // Call the editVariable function to send the request to API
+        });
+
+      populateDropdown();
+
+      document.getElementById("saveButton").addEventListener("click", saveData);
+      document.getElementById("saveButton1").addEventListener("click", saveData1);
+      document.getElementById("removeButton").addEventListener("click", removeData);
+      document.getElementById("printButton").addEventListener("click", printData);
+    </script>
+
+  </body>
+
+  </html>
+
+
+  <!-- function saveData() {
+       var fileContent = document.getElementById('fileContent').textContent;
+       var fileContent50 = document.getElementById('fileContent50').textContent;
+       var fileContent150 = document.getElementById('fileContent150').textContent;
+
+       var dataArray = fileContent.split(',').map(Number);
+       var dataArray50 = fileContent50.split(',').map(Number);
+       var dataArray150 = fileContent150.split(',').map(Number);
+
+       var csvContent = "data:text/csv;charset=utf-8";
+       for (var i = 0; i < dataArray.length; i++) {
+         csvContent += "\n" + dataArray[i] + "," + dataArray50[i] + "," + dataArray150[i];
+       }
+
+       var encodedUri = encodeURI(csvContent);
+       var link = document.createElement("a");
+       link.setAttribute("href", encodedUri);
+       link.setAttribute("download", "data.csv");
+       document.body.appendChild(link);
+       link.click();
+     }
+
+     function saveData() {
+       var fileContent = document.getElementById('fileContent').textContent;
+       var fileContent50 = document.getElementById('fileContent50').textContent;
+       var fileContent150 = document.getElementById('fileContent150').textContent;
+
+       var dataArray = fileContent.split(',').map(Number);
+       var dataArray50 = fileContent50.split(',').map(Number);
+       var dataArray150 = fileContent150.split(',').map(Number);
+
+       var csvContent = "data:text/csv;charset=utf-8," + dataArray.join(',') + '\n' +
+         dataArray50.join(',') + '\n' +
+         dataArray150.join(',');
+       var encodedUri = encodeURI(csvContent);
+       var link = document.createElement("a");
+       link.setAttribute("href", encodedUri);
+       link.setAttribute("download", "data.csv");
+       document.body.appendChild(link);
+       link.click();
+     }   -->

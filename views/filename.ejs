@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Send POST Request</title>
+</head>
+<body>
+    <div class="text-center mt4" style="margin-top: 4rem;">
+    <h1>โปรดระบุชื่อการทดลอง</h1>
+    <p style="color: red;">*หากเว้นว่างจะถูกตั้งเป็นวันและเวลาโดยอัตโนมัติ</p>
+    <form class="mt-4" id="myForm">
+        <div class="mb-3" style="margin-top: 2rem;">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" placeholder="Enter Name" required>
+        </div>
+        <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="/home" class="btn btn-danger">Cancle</a>
+        </div>
+    </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.getElementById('myForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var name = document.getElementById('name').value;
+
+            var data = {
+                name: name,
+            };
+
+            axios.post('http://192.168.1.101:8000/filename', data)
+            .then(response => {
+                console.log('Response:', response.data);
+                window.location.href = "/start";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Line Chart with Moving Averages</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <canvas id="chart"></canvas>
+
+    <script type="text/javascript">
+      // Generate the original data
+      var originalData = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+      // Calculate the moving averages
+      var windowSize1 = 50;
+      var windowSize2 = 150;
+      var movingAvgData1 = calculateMovingAverage(originalData, windowSize1);
+      var movingAvgData2 = calculateMovingAverage(originalData, windowSize2);
+
+      // Function to calculate the moving average
+      function calculateMovingAverage(data, windowSize) {
+        var movingAvgData = [];
+        for (var i = windowSize - 1; i < data.length; i++) {
+          var sum = 0;
+          for (var j = i - windowSize + 1; j <= i; j++) {
+            sum += data[j];
+          }
+          var avg = sum / windowSize;
+          movingAvgData.push(avg.toFixed(2));
+        }
+        return movingAvgData;
+      }
+
+      // Create the chart data array
+      var chartData = {
+        labels: ['Point 1', 'Point 2', 'Point 3', 'Point 4', 'Point 5', 'Point 6', 'Point 7', 'Point 8', 'Point 9', 'Point 10'],
+        datasets: [
+          {
+            label: 'Original Data',
+            data: originalData,
+            borderColor: 'red',
+            fill: false
+          },
+          {
+            label: 'Moving Average (Window Size = 50)',
+            data: movingAvgData1,
+            borderColor: 'blue',
+            fill: false
+          },
+          {
+            label: 'Moving Average (Window Size = 150)',
+            data: movingAvgData2,
+            borderColor: 'green',
+            fill: false
+          }
+        ]
+      };
+
+      // Create the chart options
+      var chartOptions = {
+        responsive: true,
+        title: {
+          display: true,
+          text: 'Line Chart with Moving Averages'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Value'
+            }
+          }]
+        }
+      };
+
+      // Create the chart
+      var ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: chartOptions
+      });
+    </script>
+  </body>
+</html>
